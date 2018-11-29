@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
 
 # data preparation 
 # 1. Read Copper LME prices 
@@ -21,13 +22,18 @@ main_df = main_df.groupby('Date').mean()
 
 # train-test split
 
+main_data = main_df.values
 train = main_df.iloc[0:600,:]
 test = main_df.iloc[600:,:]
 
+# normalise data
+scalar = MinMaxScaler(feature_range = (-1, 1))
+scaled_data = scalar.fit_transform(main_data)
+
 x_train, y_train = [],[]
 for i in range(400, len(train)):
-    x_train.append(main_df.iloc[i-400:i,0])
-    y_train.append(main_df.iloc[i,0])
+    x_train.append(scaled_data[i-400:i,0])
+    y_train.append(scaled_data[i,0])
 
 x_train, y_train = np.array(x_train), np.array(y_train)
 x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
@@ -42,14 +48,17 @@ model.compile(loss = 'mean_squared_error', optimizer = 'adam')
 model.fit(x_train, y_train, epochs = 1, batch_size = 1, verbose = 2)
 
 # prediction
-inputs = main_df.iloc[len(main_df) - len(test) - 400:]
+inputs = main_df.iloc[len(main_df) - len(test) - 400:].values
+inputs = inputs.reshape(-1, 1)
+inputs = scalar.transform(inputs)
 
 X_test = []
 for i in range(400, inputs.shape[0]):
-    X_test.append(inputs.iloc[i-400:i,0])    
+    X_test.append(inputs[i-400:i,0])    
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 pred_price = model.predict(X_test)
+pred_price = scalar.inverse_transform(pred_price)
 
 # Plot
 
