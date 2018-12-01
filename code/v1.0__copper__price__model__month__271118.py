@@ -68,7 +68,4 @@ test['predictions'] = pred_price
 plt.plot(train['Spot'])
 plt.plot(test[['Spot', 'predictions']])
 
-train.to_csv("./output/train-data.csv", index = True)
-test.to_csv("./output/test-data.csv", index = True)
-
 
