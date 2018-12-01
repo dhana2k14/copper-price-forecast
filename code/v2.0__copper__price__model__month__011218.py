@@ -10,15 +10,37 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 
-# data preparation 
-# 1. Read Copper LME prices 
+# python functions
 
+# read datasets and consolidate
 print("Current Working Directory is %s" % os.getcwd())
-main_df = pd.read_excel("./data/Copper_LME_MCK.xlsx", sheet_name = 'Copper_LME_Price_History', skiprows = 1)
-main_df.drop(['3-Month', '15-Month', '27-Month'], axis = 1, inplace = True)
-main_df.sort_values('Date', ascending = False, inplace = True)
+main_df = pd.read_csv("./data/copper_df.csv", usecols = [0,3], parse_dates = ['Date'])
 main_df['Date'] = main_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 main_df = main_df.groupby('Date').mean()
+main_df.tail()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # train-test split
 
