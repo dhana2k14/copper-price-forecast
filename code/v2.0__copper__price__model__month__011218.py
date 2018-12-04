@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from functools import reduce
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
@@ -13,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 # intial configurations
 
 weeks_lag = 2  
-max_date = 
+max_date = 0
 
 # python functions
 
@@ -34,7 +35,7 @@ cathode_df = cathode_df.groupby('Date', as_index = False).mean()
 cathode_df = cathode_df.loc[cathode_df['Date'] >= '2013-12-31']
 cathode_df.tail()
 
-# Copper scarp prices
+# Copper scrap prices
 
 scrap_df = pd.read_csv("./data/cu_scrap_df.csv", usecols = [0, 1, 2, 3, 4, 5, 6, 7, 8], parse_dates = ['Date'])
 scrap_df['Date'] = scrap_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
@@ -45,20 +46,33 @@ scrap_df.tail()
 # Crude oil prices
 # Convert to weekly data
 
-oil_df = pd.read_csv("./data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float16})
+oil_df = pd.read_csv("./data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('2012-01-01'), end = pd.to_datetime('2018-11-30'), freq = 'W'), columns = ['Date'])
 temp_df = pd.merge(temp_df, oil_df, how = 'left', on = 'Date')
-temp_df.tail()
+oil_df = temp_df.fillna(method = 'ffill')
+oil_df.tail()
 
 # Copper demand & supply
 
-demand_df = pd.read_csv("./data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float16, 'Consumption':np.float16})
+demand_df = pd.read_csv("./data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float, 'Consumption':np.float})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('1998-01-01'), end = pd.to_datetime('2019-12-31'), freq = 'MS'), columns = ['Date'])
 temp_df = pd.merge(temp_df, demand_df, how = 'left', on = 'Date')
-temp_df.tail()
+temp_df['Date'] = temp_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
+demand_df = temp_df.fillna(method = 'ffill')
+demand_df.tail()
 
+# Copper Concentrate prices
 
+concen_df = pd.read_csv("./data/cu_concentrate_df.csv", parse_dates = ['Date'], dtype = {'CU_Concentrate_TC':np.float,'CU_Concentrate_RC':np.float})
+concen_df['Date'] = concen_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
+concen_df = concen_df.groupby('Date', as_index = False).mean()
+concen_df.tail()
 
+# merge 
+
+dfs = [main_df, cathode_df, scrap_df, oil_df, demand_df, concen_df]
+final_df = reduce(lambda left, right: pd.merge(left, right, how = 'left', on = 'Date'), dfs)
+final_df.tail()
 
 
 
