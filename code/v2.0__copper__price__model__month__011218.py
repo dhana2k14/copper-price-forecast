@@ -140,7 +140,7 @@ model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2]), return_sequ
 model.add(LSTM(50))
 model.add(Dense(1))
 model.compile(loss = 'mae', optimizer = 'adam')
-fit_model = model.fit(train_X, train_y, epochs = 50, batch_size = 1, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
+fit_model = model.fit(train_X, train_y, epochs = 100, batch_size = 50, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
 plt.plot(fit_model.history['loss'], label = 'train')
 plt.plot(fit_model.history['val_loss'], label = 'test')
 plt.legend()
