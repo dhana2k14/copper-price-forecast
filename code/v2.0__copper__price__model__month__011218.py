@@ -5,11 +5,14 @@
 import pandas as pd
 import os
 import numpy as np
+from numpy import concatenate
 import matplotlib.pyplot as plt
-from functools import reduce
+from pandas import concat
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+from math import sqrt
 
 # intial configurations
 
@@ -17,6 +20,24 @@ weeks_lag = 2
 max_date = 0
 
 # python functions
+# input sequence 
+def series_to_supervised(data, n_in = 1, n_out = 1, dropnan = True):
+    names, cols = [], []
+    n_vars = 1 if type(data) is list else data.shape[1]
+    df = pd.DataFrame(data)   
+    for i in range(n_in, 0, -1):
+        cols.append(df.shift(i))
+        names += ["var%d(t-%d)" % (j+1, i) for j in range(n_vars)]
+# forecast sequence
+    for i in range(0, n_out):
+        if i == 0:
+            cols.append(df.shift(-i))
+            names += ["var%d(t)" % (j+1) for j in range(n_vars)]    
+    agg = concat(cols, axis = 1)
+    agg.columns = names
+    if dropnan:
+        agg.dropna(inplace = True)
+    return agg
 
 # read datasets and consolidate
 # copper spot prices
@@ -25,7 +46,7 @@ main_df = pd.read_csv("./data/copper_df.csv", usecols = [0,3], parse_dates = ['D
 main_df['Date'] = main_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 main_df = main_df.groupby('Date', as_index = False).mean()
 main_df = main_df.loc[main_df['Date'] >= '2013-12-31',:]
-main_df.head()
+main_df.tail()
 
 # Copper Cathode prices 
 
@@ -33,6 +54,7 @@ cathode_df = pd.read_csv("./data/cu_cathode_df.csv", usecols = [0, 1, 2, 3, 4, 5
 cathode_df['Date'] = cathode_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 cathode_df = cathode_df.groupby('Date', as_index = False).mean()
 cathode_df = cathode_df.loc[cathode_df['Date'] >= '2013-12-31']
+cathode_df = cathode_df.fillna(method = 'bfill')
 cathode_df.tail()
 
 # Copper scrap prices
@@ -70,50 +92,80 @@ concen_df.tail()
 
 # merge 
 
-dfs = [main_df, cathode_df, scrap_df, oil_df, demand_df, concen_df]
-final_df = reduce(lambda left, right: pd.merge(left, right, how = 'left', on = 'Date'), dfs)
-final_df.tail()
+main_df = pd.merge(main_df, cathode_df, how = 'left', on = 'Date')
+main_df = pd.merge(main_df, scrap_df, how = 'left', on = 'Date')
+main_df = pd.merge(main_df, demand_df, how = 'left', on = 'Date')
+main_df = pd.merge(main_df, concen_df, how = 'left', on = 'Date')
 
+# replace missing values with backfill
 
+main_df['Production'] = main_df['Production'].fillna(method = 'bfill')
+main_df['Consumption'] = main_df['Consumption'].fillna(method = 'bfill')
+main_df['CU_Concentrate_TC'] = main_df['CU_Concentrate_TC'].fillna(method = 'bfill')
+main_df['CU_Concentrate_RC'] = main_df['CU_Concentrate_RC'].fillna(method = 'bfill')
+main_df = main_df.fillna(method = 'ffill')
 
+# convert series to supervised 
+# name Date as index 
 
+main_df.index = main_df['Date']
+main_df.drop('Date', axis = 1, inplace = True)
+values = main_df.values
 
+# normalize features
 
+scalar = MinMaxScaler()
+scaled_data = scalar.fit_transform(values)
+reframed_data = series_to_supervised(scaled_data, 1, 1)
+reframed_data = reframed_data.iloc[:, 0:23]
+reframed_data.tail()
 
+# train-test split
+# convert sample into 3D format for LSTM 
 
+weeks_to_train = 253-48
+values = reframed_data.values
+train = values[:weeks_to_train, :]
+test = values[weeks_to_train:, :]
+train_X, train_y = train[:, :-1], train[:,-1]
+test_X, test_y = test[:, :-1], test[:, -1]
+train_X = train_X.reshape(train_X.shape[0], 1, train_X.shape[1])
+test_X = test_X.reshape(test_X.shape[0], 1, test_X.shape[1])
+print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
 
-
-
-
-
-
-## train-test split
-#
-#main_data = main_df.values
-#train = main_df.iloc[0:600,:]
-#test = main_df.iloc[600:,:]
-#
-## normalise data
-#scalar = MinMaxScaler(feature_range = (-1, 1))
-#scaled_data = scalar.fit_transform(main_data)
-#
-#x_train, y_train = [],[]
-#for i in range(400, len(train)):
-#    x_train.append(scaled_data[i-400:i,0])
-#    y_train.append(scaled_data[i,0])
-#
-#x_train, y_train = np.array(x_train), np.array(y_train)
-#x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-#
 ## lstm network
-#
-#model = Sequential()
-#model.add(LSTM(50, input_shape=(x_train.shape[1], x_train.shape[2]), return_sequences = True))
-#model.add(LSTM(50))
-#model.add(Dense(1))
-#model.compile(loss = 'mean_squared_error', optimizer = 'adam')
-#model.fit(x_train, y_train, epochs = 1, batch_size = 1, verbose = 2)
-#
+
+model = Sequential()
+model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2]), return_sequences = True))
+model.add(LSTM(50))
+model.add(Dense(1))
+model.compile(loss = 'mae', optimizer = 'adam')
+fit_model = model.fit(train_X, train_y, epochs = 50, batch_size = 1, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
+plt.plot(fit_model.history['loss'], label = 'train')
+plt.plot(fit_model.history['val_loss'], label = 'test')
+plt.legend()
+plt.show()
+
+# Evlauate model 
+# Prediction on test series
+pred_test = model.predict(test_X)
+test_X = test_X.reshape((test_X.shape[0], test_X.shape[2]))
+inv_test_X = concatenate((pred_test, test_X[:,1:]), axis = 1)
+inv_test_X = scalar.inverse_transform(inv_test_X)
+inv_test_X = inv_test_X[:,0]
+# Actual test series 
+test_y = test_y.reshape(len(test_y), 1)
+inv_test_y = concatenate((test_y, test_X[:,1:]), axis = 1)
+inv_test_y = scalar.inverse_transform(inv_test_y)
+inv_test_y = inv_test_y[:,0]
+
+# Calcuate RMSE
+rmse = sqrt(mean_squared_error(inv_test_X, inv_test_y))
+print('Test RMSE is %.3f' % rmse)
+
+
+
+
 ## prediction
 #inputs = main_df.iloc[len(main_df) - len(test) - 400:].values
 #inputs = inputs.reshape(-1, 1)
