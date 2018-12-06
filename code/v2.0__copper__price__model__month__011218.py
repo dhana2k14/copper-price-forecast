@@ -12,7 +12,7 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error
-from math import sqrt
+from keras.utils import plot_model
 
 # intial configurations
 
@@ -140,11 +140,27 @@ model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2]), return_sequ
 model.add(LSTM(50))
 model.add(Dense(1))
 model.compile(loss = 'mae', optimizer = 'adam')
-fit_model = model.fit(train_X, train_y, epochs = 100, batch_size = 50, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
+fit_model = model.fit(train_X, train_y, epochs = 100, batch_size = 100, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
+# printing train and test loss 
 plt.plot(fit_model.history['loss'], label = 'train')
 plt.plot(fit_model.history['val_loss'], label = 'test')
+plt.title("Model Loss")
+plt.ylabel("Loss")
+plt.xlabel("Epoch")
 plt.legend()
 plt.show()
+
+# Save the model 
+plot_model(model, to_file = "./output/model.png")
+
+## print train and test accuracy
+#plt.plot(fit_model.history['acc'], label = 'train')
+#plt.plot(fit_model.history['val_acc'], label = 'test')
+#plt.title("Model Accuracy")
+#plt.ylabel("Accuracy")
+#plt.xlabel("Epoch")
+#plt.legend()
+#plt.show()
 
 # Evlauate model 
 # Prediction on test series
@@ -167,7 +183,7 @@ df_cols.insert(0, "copper_pred")
 test_df = pd.DataFrame(inv_test_X, columns = df_cols)
 test_y = pd.DataFrame(inv_test_y, columns = ['copper_actual'])
 output_df = test_df.merge(test_y, left_index = True, right_index = True)
-output_df.to_csv("./output/lstm_results_named_output.csv", index = False)
+#output_df.to_csv("./output/lstm_results_named_output_batch_100.csv", index = False)
 
 # Calcuate RMSE
 mae = mean_absolute_error(inv_test_X[:,0], inv_test_y)
@@ -194,6 +210,3 @@ print('Test MAE is %.3f' % mae)
 #test['predictions'] = pred_price
 #plt.plot(train['Spot'])
 #plt.plot(test[['Spot', 'predictions']])
-
-print(main_df['Date'].tail())
-print(main_df['Date'].tail().apply(lambda x: x + pd.offsets.Week(2)))
