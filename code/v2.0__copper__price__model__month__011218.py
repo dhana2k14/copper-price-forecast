@@ -170,10 +170,8 @@ output_df = test_df.merge(test_y, left_index = True, right_index = True)
 output_df.to_csv("./output/lstm_results_named_output.csv", index = False)
 
 # Calcuate RMSE
-rmse = sqrt(mean_squared_error(inv_test_X, inv_test_y))
+rmse = sqrt(mean_squared_error(inv_test_X[:,0], inv_test_y))
 print('Test RMSE is %.3f' % rmse)
-
-
 
 
 ## prediction
