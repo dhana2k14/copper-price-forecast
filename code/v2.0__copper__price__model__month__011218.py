@@ -152,12 +152,22 @@ pred_test = model.predict(test_X)
 test_X = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 inv_test_X = concatenate((pred_test, test_X[:,1:]), axis = 1)
 inv_test_X = scalar.inverse_transform(inv_test_X)
-inv_test_X = inv_test_X[:,0]
-# Actual test series 
+
+#Actual test series 
 test_y = test_y.reshape(len(test_y), 1)
 inv_test_y = concatenate((test_y, test_X[:,1:]), axis = 1)
 inv_test_y = scalar.inverse_transform(inv_test_y)
 inv_test_y = inv_test_y[:,0]
+
+# naming columns
+
+df_cols = list(main_df.columns)
+df_cols.remove('copper_price')
+df_cols.insert(0, "copper_pred")
+test_df = pd.DataFrame(inv_test_X, columns = df_cols)
+test_y = pd.DataFrame(inv_test_y, columns = ['copper_actual'])
+output_df = test_df.merge(test_y, left_index = True, right_index = True)
+output_df.to_csv("./output/lstm_results_named_output.csv", index = False)
 
 # Calcuate RMSE
 rmse = sqrt(mean_squared_error(inv_test_X, inv_test_y))
