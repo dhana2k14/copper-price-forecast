@@ -11,7 +11,7 @@ from pandas import concat
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 from math import sqrt
 
 # intial configurations
@@ -170,8 +170,8 @@ output_df = test_df.merge(test_y, left_index = True, right_index = True)
 output_df.to_csv("./output/lstm_results_named_output.csv", index = False)
 
 # Calcuate RMSE
-rmse = sqrt(mean_squared_error(inv_test_X[:,0], inv_test_y))
-print('Test RMSE is %.3f' % rmse)
+mae = mean_absolute_error(inv_test_X[:,0], inv_test_y)
+print('Test MAE is %.3f' % mae)
 
 
 ## prediction
