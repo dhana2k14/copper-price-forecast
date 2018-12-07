@@ -14,25 +14,22 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error
 from keras.utils import plot_model
 
-# intial configurations
-
-weeks_lag = 2  
-max_date = 0
-
 # python functions
 # input sequence 
-def series_to_supervised(data, n_in = 1, n_out = 1, dropnan = True):
+def series_to_supervised(data, n_in, n_out, dropnan = True):
     names, cols = [], []
-    n_vars = 1 if type(data) is list else data.shape[1]
-    df = pd.DataFrame(data)   
+    n_vars = data.shape[1]
+    df = pd.DataFrame(data)
     for i in range(n_in, 0, -1):
         cols.append(df.shift(i))
         names += ["var%d(t-%d)" % (j+1, i) for j in range(n_vars)]
 # forecast sequence
     for i in range(0, n_out):
+        cols.append(df[0].shift(-i))
         if i == 0:
-            cols.append(df.shift(-i))
-            names += ["var%d(t)" % (j+1) for j in range(n_vars)]    
+            names += ["var%d(t)" % (j+1) for j in range(1)] 
+        else:
+            names += ["var%d(t+%d)" % (j+1, i) for j in range(1)]
     agg = concat(cols, axis = 1)
     agg.columns = names
     if dropnan:
@@ -68,7 +65,7 @@ scrap_df.tail()
 # Crude oil prices
 # Convert to weekly data
 
-oil_df = pd.read_csv("./data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float})
+oil_df = pd.read_csv("./data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float64})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('2012-01-01'), end = pd.to_datetime('2018-11-30'), freq = 'W'), columns = ['Date'])
 temp_df = pd.merge(temp_df, oil_df, how = 'left', on = 'Date')
 oil_df = temp_df.fillna(method = 'ffill')
@@ -76,7 +73,7 @@ oil_df.tail()
 
 # Copper demand & supply
 
-demand_df = pd.read_csv("./data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float, 'Consumption':np.float})
+demand_df = pd.read_csv("./data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float64, 'Consumption':np.float64})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('1998-01-01'), end = pd.to_datetime('2019-12-31'), freq = 'MS'), columns = ['Date'])
 temp_df = pd.merge(temp_df, demand_df, how = 'left', on = 'Date')
 temp_df['Date'] = temp_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
@@ -85,7 +82,7 @@ demand_df.tail()
 
 # Copper Concentrate prices
 
-concen_df = pd.read_csv("./data/cu_concentrate_df.csv", parse_dates = ['Date'], dtype = {'CU_Concentrate_TC':np.float,'CU_Concentrate_RC':np.float})
+concen_df = pd.read_csv("./data/cu_concentrate_df.csv", parse_dates = ['Date'], dtype = {'CU_Concentrate_TC':np.float64,'CU_Concentrate_RC':np.float64})
 concen_df['Date'] = concen_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 concen_df = concen_df.groupby('Date', as_index = False).mean()
 concen_df.tail()
@@ -116,8 +113,7 @@ values = main_df.values
 
 scalar = MinMaxScaler()
 scaled_data = scalar.fit_transform(values)
-reframed_data = series_to_supervised(scaled_data, 1, 1)
-reframed_data = reframed_data.iloc[:, 0:23]
+reframed_data = series_to_supervised(scaled_data, 1, 3)
 reframed_data.tail()
 
 # train-test split
@@ -210,3 +206,28 @@ print('Test MAE is %.3f' % mae)
 #test['predictions'] = pred_price
 #plt.plot(train['Spot'])
 #plt.plot(test[['Spot', 'predictions']])
+
+# test
+
+#df = main_df['copper_price'].tail(10)
+#cols, names = [],[]
+#for i in range(0,3):
+#    cols.append(df.shift(-i))
+#    if i ==0:
+#        names += ["var%d(t)" %(j+1) for j in range(1)]
+#    else:
+#        names += ["var%d(t+%d)" %(j+1, i) for j in range(1)]
+#    agg = concat(cols, axis = 1)
+#    agg.columns = names
+    
+#names = []
+#cols = []
+#for i in range(0, 3):
+#    cols.append(s[0].shift(-i))
+#    if i ==0:
+#        names += ["var%d(t)" %(j+1) for j in range(1)] 
+#    else: 
+#        names += ["var%d(t+%d)" %(j+1, i) for j in range(1)]
+#    agg = concat(cols, axis = 1)
+
+
