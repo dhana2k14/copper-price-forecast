@@ -142,7 +142,7 @@ newModel = Sequential()
 newModel.add(LSTM(50, batch_input_shape = (1, None, test_X_reshape.shape[2]), return_sequences = False, stateful = True))
 newModel.add(Dense(1))
 newModel.set_weights(model.get_weights())
-newModel.reset_states()
+#newModel.reset_states()
 
 step255 = newModel.predict(test_X_reshape).reshape(1, 1)
 temp = concatenate((test_X[-1:,1:], step255), axis = 1)
@@ -161,35 +161,90 @@ temp = concatenate((test_X[-1:,1:], step258), axis = 1)
 temp = temp.reshape(1, 1, 3)
 step259 = newModel.predict(temp).reshape(1, 1)
 
-print(step255, step256, step257, step258, step259)
+temp = concatenate((test_X[-1:,1:], step259), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step260 = newModel.predict(temp).reshape(1, 1)
+
+temp = concatenate((test_X[-1:,1:], step260), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step261 = newModel.predict(temp).reshape(1, 1)
+
+temp = concatenate((test_X[-1:,1:], step261), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step262 = newModel.predict(temp).reshape(1, 1)
+
+temp = concatenate((test_X[-1:,1:], step262), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step263 = newModel.predict(temp).reshape(1, 1)
+
+temp = concatenate((test_X[-1:,1:], step263), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step264 = newModel.predict(temp).reshape(1, 1)
+
+temp = concatenate((test_X[-1:,1:], step264), axis = 1)
+temp = temp.reshape(1, 1, 3)
+step265 = newModel.predict(temp).reshape(1, 1)
+
+
 
 # merge the prediction with prediction sequence 
 
 # week - 1
 step255 = concatenate((test_X[-1:,:], step255), axis = 1)
-step255 = scalar.inverse_transform(step255)
+step255 = scalar.inverse_transform(step255).tolist()
 
 # week - 2
 step256 = concatenate((test_X[-1:,:], step256), axis = 1)
-step256 = scalar.inverse_transform(step256)
+step256 = scalar.inverse_transform(step256).tolist()
+
 
 # week - 3
 step257 = concatenate((test_X[-1:,:], step257), axis = 1)
-step257 = scalar.inverse_transform(step257)
+step257 = scalar.inverse_transform(step257).tolist()
 
 # week-4
 step258 = concatenate((test_X[-1:,:], step258), axis = 1)
-step258 = scalar.inverse_transform(step258)
+step258 = scalar.inverse_transform(step258).tolist()
 
 # week - 5
 step259 = concatenate((test_X[-1:,:], step259), axis = 1)
-step259 = scalar.inverse_transform(step259)
-   
+step259 = scalar.inverse_transform(step259).tolist()
 
+# week - 6
+step260 = concatenate((test_X[-1:,:], step260), axis = 1)
+step260 = scalar.inverse_transform(step260).tolist()
 
+# week - 7
+step261 = concatenate((test_X[-1:,:], step261), axis = 1)
+step261 = scalar.inverse_transform(step261).tolist()
 
+# week - 8
+step262 = concatenate((test_X[-1:,:], step262), axis = 1)
+step262 = scalar.inverse_transform(step262).tolist()
 
+# week - 9
+step263 = concatenate((test_X[-1:,:], step263), axis = 1)
+step263 = scalar.inverse_transform(step263).tolist()
 
+# week - 10
+step264 = concatenate((test_X[-1:,:], step264), axis = 1)
+step264 = scalar.inverse_transform(step264).tolist()
+
+# week - 11
+step265 = concatenate((test_X[-1:,:], step265), axis = 1)
+step265 = scalar.inverse_transform(step265).tolist()
+
+print("Week - 1 : %3.f" % step255[0][3])
+print("Week - 2 : %3.f" % step256[0][3])
+print("Week - 3 : %3.f" % step257[0][3])
+print("Week - 4 : %3.f" % step258[0][3])
+print("Week - 5 : %3.f" % step259[0][3])
+print("Week - 6 : %3.f" % step260[0][3])
+print("Week - 7 : %3.f" % step261[0][3])
+print("Week - 8 : %3.f" % step262[0][3])
+print("Week - 9 : %3.f" % step263[0][3])
+print("Week - 10 : %3.f" % step264[0][3])
+print("Week - 11 : %3.f" % step265[0][3])
 
 
 
