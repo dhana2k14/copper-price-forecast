@@ -5,7 +5,7 @@
 import pandas as pd
 import os
 import numpy as np
-from numpy import concatenate
+from numpy import concatenate, array
 import matplotlib.pyplot as plt
 from pandas import concat
 from keras.models import Sequential
@@ -93,7 +93,6 @@ main_df = pd.merge(main_df, cathode_df, how = 'left', on = 'Date')
 main_df = pd.merge(main_df, scrap_df, how = 'left', on = 'Date')
 main_df = pd.merge(main_df, demand_df, how = 'left', on = 'Date')
 main_df = pd.merge(main_df, concen_df, how = 'left', on = 'Date')
-
 # replace missing values with backfill
 
 main_df['Production'] = main_df['Production'].fillna(method = 'bfill')
@@ -111,43 +110,79 @@ values = main_df.values
 
 # normalize features
 
-scalar = MinMaxScaler()
+scalar = MinMaxScaler(feature_range = (-1, 1))
 scaled_data = scalar.fit_transform(values)
-reframed_data = series_to_supervised(scaled_data, 1, 3)
+reframed_data = series_to_supervised(scaled_data, 1, 1)
 reframed_data.tail()
 
 # train-test split
 # convert sample into 3D format for LSTM 
 
-weeks_to_train = 253-48
 values = reframed_data.values
-train = values[:weeks_to_train, :]
-test = values[weeks_to_train:, :]
-train_X, train_y = train[:, :-1], train[:,-1]
-test_X, test_y = test[:, :-1], test[:, -1]
-train_X = train_X.reshape(train_X.shape[0], 1, train_X.shape[1])
-test_X = test_X.reshape(test_X.shape[0], 1, test_X.shape[1])
-print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
+train = values[0:values.shape[0]-1, :]
+test = values[values.shape[0]-1:,:]
+train_X, train_y = train[:, :-1], train[:,-1:]
+test_X, test_y = test[:, :-1], test[:,-1:]
+train_X = train_X.reshape(train_X.shape[0], train_X.shape[1], 1)
+test_X = test_X.reshape(test_X.shape[0], test_X.shape[1], 1)
+print(train_X.shape, train_y.shape, test_X.shape)
 
 ## lstm network
 
 model = Sequential()
-model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2]), return_sequences = True))
-model.add(LSTM(50))
-model.add(Dense(1))
+model.add(LSTM(50, batch_input_shape=(1, train_X.shape[1], train_X.shape[2]), stateful = False))
+model.add(Dense(train_y.shape[1]))
 model.compile(loss = 'mae', optimizer = 'adam')
-fit_model = model.fit(train_X, train_y, epochs = 100, batch_size = 100, verbose = 2, validation_data = (test_X, test_y), shuffle = False)
-# printing train and test loss 
-plt.plot(fit_model.history['loss'], label = 'train')
-plt.plot(fit_model.history['val_loss'], label = 'test')
-plt.title("Model Loss")
-plt.ylabel("Loss")
-plt.xlabel("Epoch")
-plt.legend()
-plt.show()
+fit_model = model.fit(train_X, train_y, epochs = 50, batch_size = 1, verbose = 0, shuffle = False)
 
-# Save the model 
-plot_model(model, to_file = "./output/model.png")
+# forecast on test dataset
+
+pred = model.predict(test_X)
+test_X = test_X.reshape(test_X.shape[0], test_X.shape[1])
+test_X_df = concatenate((test_X[:,0:19], pred), axis = 1)
+inv_test_X_df = scalar.inverse_transform(test_X_df)
+
+
+
+
+# forecast at one point 
+
+def forecast_lstm(model, x, batch_size = 1):
+    x = x.reshape(1, 1, len(x))
+    forecast = model.predict(x, batch_size)
+    return [x for x in forecast[0,:]]
+
+# convert forecast to array and invert transform
+
+def make_forecasts(model, test, batch_size =1):
+    forecasts = list()
+    for i in range(len(test)):
+        x, y = test[i,:-3], test[i,-3:]
+        forecast = forecast_lstm(model, x, batch_size = 1)
+        forecasts.append(forecast)
+    return forecasts
+
+forecasts = make_forecasts(model, test, batch_size = 1)
+        
+for i in range(len(forecasts)):
+    print(forecasts[i])
+    forecast = array(forecasts[i])
+    print(len(forecast))
+    forecast = forecast.reshape((1, len(forecast)))
+    print(forecast.shape)
+    inv_scale = scalar.inverse_transform(forecast)
+    print(inv_scale)
+        
+        
+        
+
+    
+
+
+
+
+
+
 
 ## print train and test accuracy
 #plt.plot(fit_model.history['acc'], label = 'train')
