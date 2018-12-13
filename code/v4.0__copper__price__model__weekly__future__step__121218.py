@@ -115,20 +115,25 @@ print("Transformed Data Shape : {}".format(scaled_data.shape))
 train_X = scaled_data[0:len(scaled_data)-1,:-1]
 train_y = scaled_data[1:len(scaled_data), -1:]
 test_X = scaled_data[0:len(scaled_data), :-1]
-print(train_X.shape, train_y.shape)
+print("Training Seq shape : {}".format(train_X.shape), "Target Seq Shape :{}".format(train_y.shape))
 
 # reshape
 
 train_X = train_X.reshape(1, train_X.shape[0], train_X.shape[1]) 
 train_y = train_y.reshape(1, train_y.shape[0], train_y.shape[1])
 test_X_reshape = test_X.reshape(1, test_X.shape[0], test_X.shape[1])
+print("Training Seq shape : {}".format(train_X.shape))
+print("Target Seq Shape : {}".format(train_y.shape))
+print("Prediction Seq Shape : {}".format(test_X_reshape.shape))
 
 # model
 model = Sequential()
 model.add(LSTM(50, input_shape=(None, train_X.shape[2]), return_sequences = True))
 model.add(Dense(1))
 model.compile(loss = 'mae', optimizer = 'adam')
-fit_model = model.fit(train_X, train_y, epochs = 100, batch_size = 100, verbose = 2)
+model.fit(train_X, train_y, epochs = 100, batch_size = 100, verbose = 2)
+print("Model Summary")
+model.summary()
         
 # prediction
 
@@ -136,49 +141,47 @@ newModel = Sequential()
 newModel.add(LSTM(50, batch_input_shape = (1, None, test_X_reshape.shape[2]), return_sequences = False, stateful = True))
 newModel.add(Dense(1))
 newModel.set_weights(model.get_weights())
-#newModel.reset_states()
 
 step255 = newModel.predict(test_X_reshape).reshape(1, 1)
 temp = concatenate((test_X[-1:,1:], step255), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step256 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step256), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step257 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step257), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step258 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step258), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step259 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step259), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step260 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step260), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step261 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step261), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step262 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step262), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step263 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step263), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step264 = newModel.predict(temp).reshape(1, 1)
 
 temp = concatenate((test_X[-1:,1:], step264), axis = 1)
-temp = temp.reshape(1, 1, 3)
+temp = temp.reshape(1, 1, temp.shape[1])
 step265 = newModel.predict(temp).reshape(1, 1)
-
 
 
 # merge the prediction with prediction sequence 
@@ -228,21 +231,34 @@ step264 = scalar.inverse_transform(step264).tolist()
 step265 = concatenate((test_X[-1:,:], step265), axis = 1)
 step265 = scalar.inverse_transform(step265).tolist()
 
-print("Week - 1 : %3.f" % step255[0][3])
-print("Week - 2 : %3.f" % step256[0][3])
-print("Week - 3 : %3.f" % step257[0][3])
-print("Week - 4 : %3.f" % step258[0][3])
-print("Week - 5 : %3.f" % step259[0][3])
-print("Week - 6 : %3.f" % step260[0][3])
-print("Week - 7 : %3.f" % step261[0][3])
-print("Week - 8 : %3.f" % step262[0][3])
-print("Week - 9 : %3.f" % step263[0][3])
-print("Week - 10 : %3.f" % step264[0][3])
-print("Week - 11 : %3.f" % step265[0][3])
+print("Week - 1 : %3.f" % step255[0][-1])
+print("Week - 2 : %3.f" % step256[0][-1])
+print("Week - 3 : %3.f" % step257[0][-1])
+print("Week - 4 : %3.f" % step258[0][-1])
+print("Week - 5 : %3.f" % step259[0][-1])
+print("Week - 6 : %3.f" % step260[0][-1])
+print("Week - 7 : %3.f" % step261[0][-1])
+print("Week - 8 : %3.f" % step262[0][-1])
+print("Week - 9 : %3.f" % step263[0][-1])
+print("Week - 10 : %3.f" % step264[0][-1])
+print("Week - 11 : %3.f" % step265[0][-1])
 
 
+# model scoped to predict on all test cases
+# model remains the same as in lines from 130 to 136
 
+newModel = Sequential()
+newModel.add(LSTM(50, batch_input_shape = (1, None, test_X_reshape.shape[2]), return_sequences = True, stateful = True))
+newModel.add(Dense(1))
+newModel.set_weights(model.get_weights())
+pred = newModel.predict(test_X_reshape)
 
+# merge predictions onto test 
+pred = pred.reshape(pred.shape[1], pred.shape[2])
+test_pred_df = concatenate((test_X[:,:], pred), axis = 1)
+test_pred_df_inv = scalar.inverse_transform(test_pred_df)
+df = pd.DataFrame(test_pred_df_inv)
+df.iloc[:,[0,-1]].tail()
 
-
-
+# write to disk
+df.to_csv("./output/prediction_test_cases_254.csv", index = False)
