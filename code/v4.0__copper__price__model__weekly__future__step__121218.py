@@ -5,14 +5,10 @@
 import pandas as pd
 import os
 import numpy as np
-from numpy import concatenate, array
-import matplotlib.pyplot as plt
-from pandas import concat
+from numpy import concatenate
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_absolute_error
-from keras.utils import plot_model
 
 # python functions
 # input sequence 
@@ -106,16 +102,14 @@ main_df = main_df.fillna(method = 'ffill')
 
 main_df.index = main_df['Date']
 main_df.drop('Date', axis = 1, inplace = True)
-main_df = main_df.iloc[:,0:3] # consider 2 variables to start with 
-main_df.columns = ['x1','x2','x3']
-main_df['y'] = main_df['x1'].copy()
+main_df['target'] = main_df['copper_price'].copy()
 values = main_df.values
 
 # normalize features
 
 scalar = MinMaxScaler(feature_range = (-1, 1))
 scaled_data = scalar.fit_transform(values)
-scaled_data.shape
+print("Transformed Data Shape : {}".format(scaled_data.shape))
 
 # training and test sequence
 train_X = scaled_data[0:len(scaled_data)-1,:-1]
