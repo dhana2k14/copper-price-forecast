@@ -9,6 +9,7 @@ from numpy import concatenate
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 # python functions
 # input sequence 
@@ -262,3 +263,15 @@ df.iloc[:,[0,-1]].tail()
 
 # write to disk
 df.to_csv("./output/prediction_test_cases_254.csv", index = False)
+
+# Plot results 
+
+train_X_reshape = train_X.reshape(train_X.shape[1], train_X.shape[2])
+train_y_reshape = train_y.reshape(train_y.shape[1], train_y.shape[2])
+train_df = concatenate((train_X_reshape, train_y_reshape), axis = 1)
+train_df = pd.DataFrame(scalar.inverse_transform(train_df))
+plt.plot(train_df.iloc[:,22])
+plt.plot(df.iloc[:,[0,22]])
+
+
+
