@@ -69,11 +69,8 @@ newModel.add(LSTM(50, return_sequences = False))
 newModel.add(Dense(1))
 newModel.set_weights(model.get_weights())
 
-step_1 = newModel.predict(X_test, batch_size = 100)
-
-
-
-
+pred = newModel.predict(X_test, batch_size = 100)
+pred = scalar.inverse_transform(pred)
 
 # Plot
 
@@ -83,4 +80,5 @@ test['predictions'] = pred_price
 plt.plot(train['Spot'])
 plt.plot(test[['Spot', 'predictions']])
 
-
+# write to file
+pred.csv('../output/pred_file.csv', index = False)
