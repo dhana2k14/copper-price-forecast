@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 # 1. Read Copper LME prices 
 
 print("Current Working Directory is %s" % os.getcwd())
-main_df = pd.read_excel("./data/Copper_LME_MCK.xlsx", sheet_name = 'Copper_LME_Price_History', skiprows = 1)
+main_df = pd.read_excel("../data/Copper_LME_MCK.xlsx", sheet_name = 'Copper_LME_Price_History', skiprows = 1)
 main_df.drop(['3-Month', '15-Month', '27-Month'], axis = 1, inplace = True)
 main_df.sort_values('Date', ascending = False, inplace = True)
 main_df['Date'] = main_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
@@ -45,7 +45,7 @@ model.add(LSTM(50, input_shape=(x_train.shape[1], x_train.shape[2]), return_sequ
 model.add(LSTM(50))
 model.add(Dense(1))
 model.compile(loss = 'mean_squared_error', optimizer = 'adam')
-model.fit(x_train, y_train, epochs = 1, batch_size = 1, verbose = 2)
+model.fit(x_train, y_train, epochs = 1, batch_size = 100, verbose = 2)
 
 # prediction
 inputs = main_df.iloc[len(main_df) - len(test) - 400:].values
@@ -59,6 +59,21 @@ X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 pred_price = model.predict(X_test)
 pred_price = scalar.inverse_transform(pred_price)
+
+# prediction - Multistep into Future
+
+newModel = Sequential()
+newModel.add(LSTM(50, batch_input_shape = (X_test.shape[0], X_test.shape[1], X_test.shape[2]), 
+                  return_sequences = True, stateful = True))
+newModel.add(LSTM(50, return_sequences = False))
+newModel.add(Dense(1))
+newModel.set_weights(model.get_weights())
+
+step_1 = newModel.predict(X_test, batch_size = 100)
+
+
+
+
 
 # Plot
 
