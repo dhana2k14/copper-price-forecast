@@ -103,8 +103,11 @@ main_df = main_df.fillna(method = 'ffill')
 
 main_df.index = main_df['Date']
 main_df.drop('Date', axis = 1, inplace = True)
-main_df['target'] = main_df['copper_price'].copy()
 values = main_df.values
+
+# train-test split
+train = main_df.iloc[0:234,:]
+test = main_df.iloc[234:,:]
 
 # normalize features
 
@@ -113,28 +116,52 @@ scaled_data = scalar.fit_transform(values)
 print("Transformed Data Shape : {}".format(scaled_data.shape))
 
 # training and test sequence
-train_X = scaled_data[0:len(scaled_data)-10,:-1] 
-train_y = scaled_data[1:len(scaled_data)-10 + 1, -1:]
-test_X = scaled_data[len(scaled_data)-10:, :-1]
-print("Training Seq shape : {}".format(train_X.shape), "Target Seq Shape :{}".format(train_y.shape))
-
-# reshape
-
-train_X = train_X.reshape(1, train_X.shape[0], train_X.shape[1]) 
-train_y = train_y.reshape(1, train_y.shape[0], train_y.shape[1])
-test_X_reshape = test_X.reshape(1, test_X.shape[0], test_X.shape[1])
-print("Training Seq shape : {}".format(train_X.shape))
-print("Target Seq Shape : {}".format(train_y.shape))
-print("Prediction Seq Shape : {}".format(test_X_reshape.shape))
+train_X, train_y = [], []
+for i in range(100, len(train)):
+    train_X.append(scaled_data[i-100:i,:])
+    train_y.append(scaled_data[i,0])
+    
+train_X, train_y = np.array(train_X), np.array(train_y)
 
 # model
 model = Sequential()
-model.add(LSTM(50, input_shape=(None, train_X.shape[2]), return_sequences = True))
+model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2]), return_sequences = False))
 model.add(Dense(1))
 model.compile(loss = 'mae', optimizer = 'adam')
-model.fit(train_X, train_y, epochs = 100, batch_size = 100, verbose = 2)
+model.fit(train_X, train_y, epochs = 10, batch_size = 100, verbose = 2)
 print("Model Summary")
 model.summary()
+
+# test-cases 
+
+inputs = main_df.iloc[len(main_df) - len(test) - 100:].values
+inputs = scalar.transform(inputs)
+
+X_test = []
+for i in range(100, inputs.shape[0]):
+    X_test.append(inputs[i-100:i,:])    
+X_test = np.array(X_test)
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
+
+# prediction - testcases 
+pred = model.predict(X_test)
+pred = concatenate((scaled_data[-20:,1:], pred), axis = 1)
+pred = scalar.inverse_transform(pred)
+pred_df = pd.DataFrame(pred)
+
+# plotting
+
+main_df.reset_index(inplace = True) # for merging on index
+train = main_df.iloc[0:234,:]
+test = main_df.iloc[234:,:]
+test.reset_index(inplace = True)
+test['pred_price'] = pred_df.iloc[:,0]
+plt.plot(train['copper_price'])
+plt.plot(test[['copper_price', 'pred_price']])
+
+# write to file
+
+test.to_csv('../output/multi-seq-lstm-output_18Jan19_v2.0.csv', index = False)
         
 # prediction - Multistep into Future
 
