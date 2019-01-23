@@ -11,28 +11,6 @@ from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
-# python functions
-# input sequence 
-#def series_to_supervised(data, n_in, n_out, dropnan = True):
-#    names, cols = [], []
-#    n_vars = data.shape[1]
-#    df = pd.DataFrame(data)
-#    for i in range(n_in, 0, -1):
-#        cols.append(df.shift(i))
-#        names += ["var%d(t-%d)" % (j+1, i) for j in range(n_vars)]
-## forecast sequence
-#    for i in range(0, n_out):
-#        cols.append(df[0].shift(-i))
-#        if i == 0:
-#            names += ["var%d(t)" % (j+1) for j in range(1)] 
-#        else:
-#            names += ["var%d(t+%d)" % (j+1, i) for j in range(1)]
-#    agg = concat(cols, axis = 1)
-#    agg.columns = names
-#    if dropnan:
-#        agg.dropna(inplace = True)
-#    return agg
-
 # read datasets and consolidate
 # copper spot prices
 print("Current Working Directory is %s" % os.getcwd())
