@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 # read datasets and consolidate
 # copper spot prices
 print("Current Working Directory is %s" % os.getcwd())
-main_df = pd.read_csv("../data/copper_df.csv", usecols = [0,3], parse_dates = ['Date'])
+main_df = pd.read_csv("./data/copper_df.csv", usecols = [0,3], parse_dates = ['Date'])
 main_df['Date'] = main_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 main_df = main_df.groupby('Date', as_index = False).mean()
 main_df = main_df.loc[main_df['Date'] >= '2013-12-31',:]
@@ -44,7 +44,7 @@ main_df.tail()
 
 # Copper Cathode prices 
 
-cathode_df = pd.read_csv("../data/cu_cathode_df.csv", usecols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], parse_dates = ['Date'])
+cathode_df = pd.read_csv("./data/cu_cathode_df.csv", usecols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], parse_dates = ['Date'])
 cathode_df['Date'] = cathode_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 cathode_df = cathode_df.groupby('Date', as_index = False).mean()
 cathode_df = cathode_df.loc[cathode_df['Date'] >= '2013-12-31']
@@ -53,7 +53,7 @@ cathode_df.tail()
 
 # Copper scrap prices
 
-scrap_df = pd.read_csv("../data/cu_scrap_df.csv", usecols = [0, 1, 2, 3, 4, 5, 6, 7, 8], parse_dates = ['Date'])
+scrap_df = pd.read_csv("./data/cu_scrap_df.csv", usecols = [0, 1, 2, 3, 4, 5, 6, 7, 8], parse_dates = ['Date'])
 scrap_df['Date'] = scrap_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 scrap_df = scrap_df.groupby('Date', as_index = False).mean()
 scrap_df = scrap_df.loc[scrap_df['Date'] >= '2013-12-31']
@@ -62,7 +62,7 @@ scrap_df.tail()
 # Crude oil prices
 # Convert to weekly data
 
-oil_df = pd.read_csv("../data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float64})
+oil_df = pd.read_csv("./data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float64})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('2012-01-01'), end = pd.to_datetime('2018-11-30'), freq = 'W'), columns = ['Date'])
 temp_df = pd.merge(temp_df, oil_df, how = 'left', on = 'Date')
 oil_df = temp_df.fillna(method = 'ffill')
@@ -70,7 +70,7 @@ oil_df.tail()
 
 # Copper demand & supply
 
-demand_df = pd.read_csv("../data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float64, 'Consumption':np.float64})
+demand_df = pd.read_csv("./data/cu_demand_df.csv", parse_dates = ['Date'], dtype = {'Production':np.float64, 'Consumption':np.float64})
 temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('1998-01-01'), end = pd.to_datetime('2019-12-31'), freq = 'MS'), columns = ['Date'])
 temp_df = pd.merge(temp_df, demand_df, how = 'left', on = 'Date')
 temp_df['Date'] = temp_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
@@ -79,7 +79,7 @@ demand_df.tail()
 
 # Copper Concentrate prices
 
-concen_df = pd.read_csv("../data/cu_concentrate_df.csv", parse_dates = ['Date'], dtype = {'CU_Concentrate_TC':np.float64,'CU_Concentrate_RC':np.float64})
+concen_df = pd.read_csv("./data/cu_concentrate_df.csv", parse_dates = ['Date'], dtype = {'CU_Concentrate_TC':np.float64,'CU_Concentrate_RC':np.float64})
 concen_df['Date'] = concen_df['Date'].apply(lambda x: x - pd.offsets.Week(weekday = 6))
 concen_df = concen_df.groupby('Date', as_index = False).mean()
 concen_df.tail()
