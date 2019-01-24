@@ -41,7 +41,7 @@ scrap_df.tail()
 # Convert to weekly data
 
 oil_df = pd.read_csv("../data/crude_oil_df.csv", parse_dates = ['Date'], dtype = {'Crude_Oil_Index':np.float64})
-temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('2012-01-01'), end = pd.to_datetime('2018-11-30'), freq = 'W'), columns = ['Date'])
+temp_df = pd.DataFrame(pd.date_range(start = pd.to_datetime('2012-01-01'), end = max(oil_df['Date']), freq = 'W'), columns = ['Date'])
 temp_df = pd.merge(temp_df, oil_df, how = 'left', on = 'Date')
 oil_df = temp_df.fillna(method = 'ffill')
 oil_df.tail()
@@ -123,7 +123,7 @@ X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
 
 # prediction - testcases 
 pred = model.predict(X_test)
-pred = concatenate((scaled_data[-20:,1:], pred), axis = 1)
+pred = concatenate((scaled_data[-29:,1:], pred), axis = 1)
 pred = scalar.inverse_transform(pred)
 pred_df = pd.DataFrame(pred)
 
@@ -139,7 +139,7 @@ plt.plot(test[['copper_price', 'pred_price']])
 
 # write to file
 
-test.to_csv('../output/multi-seq-lstm-output_18Jan19_v2.0.csv', index = False)
+test.to_csv('../output/multi-seq-lstm-output_wt_data_till_Jan_23Jan19.csv', index = False)
         
 ## prediction - Multistep into Future
 #
