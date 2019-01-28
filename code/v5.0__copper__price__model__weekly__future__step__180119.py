@@ -193,22 +193,18 @@ inputs = scalar.transform(inputs)
 
 # prediction - testcases 
 
-for i in range(1, 2):
+df = pd.DataFrame()
+for i in range(0, 50):
     X_test = []
-    X_test.append(inputs[i:,:])
+    inputs = inputs[1:,:]
+    X_test.append(inputs)
     X_test = np.array(X_test)
     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
     pred = model.predict(X_test)
     pred = concatenate((pred, inputs[-1:,1:]), axis = 1)
+    inputs = concatenate((inputs, pred), axis = 0)
     pred = scalar.inverse_transform(pred)
-    
-
-    
-#inputs = concatenate((inputs[1:,:], pred), axis = 0)
-#print(inputs, inputs.shape)
-#inputs = np.reshape(inputs, (1, inputs.shape[0], inputs.shape[1]))
-#pred2 = model.predict(inputs)
-
+    df = df.append(pd.DataFrame(pred))
 
 
 
