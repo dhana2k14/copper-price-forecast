@@ -191,6 +191,8 @@ inputs = scalar.transform(inputs)
 #pred = model.predict(X_test)
 #pred = concatenate((pred, scaled_data[-1:,1:]), axis = 1)
 
+
+# Method - 1
 # prediction - testcases 
 
 df = pd.DataFrame()
@@ -206,7 +208,7 @@ for i in range(0, 50):
     pred = scalar.inverse_transform(pred)
     df = df.append(pd.DataFrame(pred))
 
-
+# Method - 2 
 
 
 
