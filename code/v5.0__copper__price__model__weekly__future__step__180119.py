@@ -182,16 +182,6 @@ model.summary()
 inputs = main_df.iloc[len(main_df) - len(test)  - 100:].values
 inputs = scalar.transform(inputs)
 
-#X_test = []
-#for i in range(100, inputs.shape[0]):
-#    X_test.append(inputs[i-100:i,:])    
-#X_test = np.array(X_test)
-#X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
-#
-#pred = model.predict(X_test)
-#pred = concatenate((pred, scaled_data[-1:,1:]), axis = 1)
-
-
 # Method - 1
 # prediction - testcases 
 
@@ -210,6 +200,14 @@ for i in range(0, 50):
 
 # Method - 2 
 
+X_test = []
+for i in range(100, inputs.shape[0]):
+    X_test.append(inputs[i-100:i,:])    
+X_test = np.array(X_test)
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))
+
+pred = model.predict(X_test)
+pred = concatenate((pred, scaled_data[-1:,1:]), axis = 1)
 
 
 
